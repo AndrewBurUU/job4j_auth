@@ -25,7 +25,8 @@ public class SpringPersonService {
         return personRepository.save(person);
     }
 
-    public void delete(Person person) {
+    public boolean delete(Person person) {
         personRepository.delete(person);
+        return !personRepository.existsById(person.getId());
     }
 }

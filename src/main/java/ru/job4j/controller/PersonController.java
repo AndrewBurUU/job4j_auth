@@ -44,11 +44,8 @@ public class PersonController {
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Person person) {
-        try {
-            this.persons.save(person);
+        if (person.equals(this.persons.save(person))) {
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
         }
         return ResponseEntity.badRequest().build();
     }
@@ -57,11 +54,8 @@ public class PersonController {
     public ResponseEntity<Void> delete(@PathVariable int id) {
         Person person = new Person();
         person.setId(id);
-        try {
-            this.persons.delete(person);
+        if (this.persons.delete(person)) {
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
         }
         return ResponseEntity.badRequest().build();
     }
