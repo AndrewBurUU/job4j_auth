@@ -3,10 +3,8 @@ package ru.job4j.controller;
 import org.apache.log4j.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.*;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.domain.Person;
-import ru.job4j.repository.PersonRepository;
 import ru.job4j.service.*;
 
 import java.util.List;
