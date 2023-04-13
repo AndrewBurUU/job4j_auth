@@ -12,7 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/person")
 public class PersonController {
-    /**private final PersonRepository persons;*/
+
     private final SpringPersonService persons;
     private static final Logger LOG = LogManager.getLogger(PersonController.class.getName());
 
@@ -37,14 +37,14 @@ public class PersonController {
     @PostMapping("/")
     public ResponseEntity<Person> create(@RequestBody Person person) {
         return new ResponseEntity<Person>(
-                this.persons.save(person),
+                this.persons.create(person),
                 HttpStatus.CREATED
         );
     }
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Person person) {
-        if (person.equals(this.persons.save(person))) {
+        if (this.persons.save(person)) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().build();
