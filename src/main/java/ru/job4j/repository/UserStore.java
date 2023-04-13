@@ -1,6 +1,7 @@
-package ru.job4j.url;
+package ru.job4j.repository;
 
 import org.springframework.stereotype.Component;
+import ru.job4j.model.*;
 
 import java.util.ArrayList;
 import java.util.List;

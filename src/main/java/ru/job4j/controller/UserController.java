@@ -1,4 +1,4 @@
-package ru.job4j.url;
+package ru.job4j.controller;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import org.apache.log4j.*;
+import ru.job4j.model.*;
+import ru.job4j.repository.*;
 
 @RestController
 @RequestMapping("/users")

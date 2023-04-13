@@ -1,4 +1,4 @@
-package ru.job4j.url;
+package ru.job4j.model;
 
 import java.util.Objects;
 
