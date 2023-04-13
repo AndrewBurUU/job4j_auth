@@ -18,11 +18,12 @@ import static ru.job4j.filter.JWTAuthenticationFilter.SIGN_UP_URL;
 
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter {
-    private UserDetailsServiceImpl userDetailsService;
+
+    private SpringPersonService springPersonService;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public WebSecurity(UserDetailsServiceImpl userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder) {
-        this.userDetailsService = userDetailsService;
+    public WebSecurity(SpringPersonService springPersonService, BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.springPersonService = springPersonService;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
@@ -40,7 +41,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
+        auth.userDetailsService(springPersonService).passwordEncoder(bCryptPasswordEncoder);
     }
 
     @Bean

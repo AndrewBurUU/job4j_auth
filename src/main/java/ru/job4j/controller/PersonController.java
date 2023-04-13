@@ -1,5 +1,7 @@
 package ru.job4j.controller;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.*;
 import org.springframework.http.HttpStatus;
@@ -8,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.domain.Person;
 import ru.job4j.service.*;
+import ru.job4j.repository.PersonRepository;
 
 import java.util.List;
 
@@ -21,12 +24,16 @@ import java.util.HashMap;
 public class PersonController {
 
     private final SpringPersonService persons;
+    private BCryptPasswordEncoder encoder;
     private static final Logger LOGGER = LogManager.getLogger(PersonController.class.getName());
     private final ObjectMapper objectMapper;
 
-    public PersonController(final SpringPersonService persons, ObjectMapper objectMapper) {
+    public PersonController(final SpringPersonService persons,
+                            ObjectMapper objectMapper,
+                            BCryptPasswordEncoder encoder) {
         this.persons = persons;
         this.objectMapper = objectMapper;
+        this.encoder = encoder;
     }
 
     @GetMapping("/")
@@ -55,6 +62,7 @@ public class PersonController {
         if (password.length() < 6) {
             throw new IllegalArgumentException("Invalid password. Password length must be more than 5 characters.");
         }
+        person.setPassword(encoder.encode(person.getPassword()));
         return new ResponseEntity<Person>(
                 this.persons.create(person),
                 HttpStatus.CREATED
