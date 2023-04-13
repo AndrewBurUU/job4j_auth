@@ -1,23 +1,32 @@
 package ru.job4j.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.domain.Person;
 import ru.job4j.service.*;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
+
 @RestController
 @RequestMapping("/person")
 public class PersonController {
 
     private final SpringPersonService persons;
-    private static final Logger LOG = LogManager.getLogger(PersonController.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(PersonController.class.getName());
+    private final ObjectMapper objectMapper;
 
-    public PersonController(final SpringPersonService persons) {
+    public PersonController(final SpringPersonService persons, ObjectMapper objectMapper) {
         this.persons = persons;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/")
@@ -29,13 +38,23 @@ public class PersonController {
     public ResponseEntity<Person> findById(@PathVariable int id) {
         var person = this.persons.findById(id);
         return new ResponseEntity<Person>(
-                person.orElse(new Person()),
+                person.orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Account is not found. Please, check requisites."
+                )),
                 person.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
         );
     }
 
     @PostMapping("/")
     public ResponseEntity<Person> create(@RequestBody Person person) {
+        var login = person.getLogin();
+        var password = person.getPassword();
+        if (login == null || password == null) {
+            throw new NullPointerException("Username and password mustn't be empty");
+        }
+        if (password.length() < 6) {
+            throw new IllegalArgumentException("Invalid password. Password length must be more than 5 characters.");
+        }
         return new ResponseEntity<Person>(
                 this.persons.create(person),
                 HttpStatus.CREATED
@@ -58,5 +77,16 @@ public class PersonController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().build();
+    }
+
+    @ExceptionHandler(value = { IllegalArgumentException.class })
+    public void exceptionHandler(Exception e, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setContentType("application/json");
+        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() { {
+            put("message", e.getMessage());
+            put("type", e.getClass());
+        }}));
+        LOGGER.error(e.getLocalizedMessage());
     }
 }
