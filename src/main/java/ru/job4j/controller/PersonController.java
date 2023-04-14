@@ -8,9 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
-import ru.job4j.domain.Person;
+import ru.job4j.model.Person;
 import ru.job4j.service.*;
-import ru.job4j.repository.PersonRepository;
 
 import java.util.List;
 
