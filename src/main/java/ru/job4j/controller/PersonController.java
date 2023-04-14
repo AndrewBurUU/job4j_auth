@@ -79,7 +79,22 @@ public class PersonController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Person person) {
+    public ResponseEntity<Void> update(@RequestBody PersonDTO personDTO) {
+        var login = personDTO.getLogin();
+        var password = personDTO.getPassword();
+        if (login == null || password == null) {
+            throw new NullPointerException("Username and password mustn't be empty");
+        }
+        if (password.length() < 6) {
+            throw new IllegalArgumentException("Invalid password. Password length must be more than 5 characters.");
+        }
+        var person = new Person();
+        person.setId(personDTO.getId());
+        person.setLogin(login);
+        person.setPassword(encoder.encode(password));
+        var address = addressService.findById(personDTO.getAddressId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        person.setAddress(address);
         if (this.persons.save(person)) {
             return ResponseEntity.ok().build();
         }
@@ -94,38 +109,6 @@ public class PersonController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().build();
-    }
-
-    @PatchMapping("/address")
-    public Address newAddress(@RequestBody Address address) throws InvocationTargetException, IllegalAccessException {
-        var current = addressService.findById(address.getId());
-        if (current == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
-        var methods = current.getClass().getDeclaredMethods();
-        var namePerMethod = new HashMap<String, Method>();
-        for (var method: methods) {
-            var name = method.getName();
-            if (name.startsWith("get") || name.startsWith("set")) {
-                namePerMethod.put(name, method);
-            }
-        }
-        for (var name : namePerMethod.keySet()) {
-            if (name.startsWith("get")) {
-                var getMethod = namePerMethod.get(name);
-                var setMethod = namePerMethod.get(name.replace("get", "set"));
-                if (setMethod == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "Impossible invoke set method from object : " + current + ", Check set and get pairs.");
-                }
-                var newValue = getMethod.invoke(address);
-                if (newValue != null) {
-                    setMethod.invoke(current, newValue);
-                }
-            }
-        }
-        addressService.save(address);
-        return current.get();
     }
 
     @ExceptionHandler(value = { IllegalArgumentException.class })
