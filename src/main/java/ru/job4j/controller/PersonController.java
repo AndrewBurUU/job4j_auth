@@ -8,9 +8,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
-import ru.job4j.model.Person;
+import ru.job4j.dto.*;
+import ru.job4j.model.*;
 import ru.job4j.service.*;
 
+import java.lang.reflect.*;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,14 +25,17 @@ import java.util.HashMap;
 public class PersonController {
 
     private final SpringPersonService persons;
+    private final SpringAddressService addressService;
     private BCryptPasswordEncoder encoder;
     private static final Logger LOGGER = LogManager.getLogger(PersonController.class.getName());
     private final ObjectMapper objectMapper;
 
     public PersonController(final SpringPersonService persons,
+                            SpringAddressService addressService,
                             ObjectMapper objectMapper,
                             BCryptPasswordEncoder encoder) {
         this.persons = persons;
+        this.addressService = addressService;
         this.objectMapper = objectMapper;
         this.encoder = encoder;
     }
@@ -52,16 +57,21 @@ public class PersonController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Person> create(@RequestBody Person person) {
-        var login = person.getLogin();
-        var password = person.getPassword();
+    public ResponseEntity<Person> create(@RequestBody PersonDTO personDTO) {
+        var login = personDTO.getLogin();
+        var password = personDTO.getPassword();
         if (login == null || password == null) {
             throw new NullPointerException("Username and password mustn't be empty");
         }
         if (password.length() < 6) {
             throw new IllegalArgumentException("Invalid password. Password length must be more than 5 characters.");
         }
-        person.setPassword(encoder.encode(person.getPassword()));
+        var person = new Person();
+        person.setLogin(login);
+        person.setPassword(encoder.encode(password));
+        var address = addressService.findById(personDTO.getAddressId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        person.setAddress(address);
         return new ResponseEntity<Person>(
                 this.persons.create(person),
                 HttpStatus.CREATED
@@ -84,6 +94,38 @@ public class PersonController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().build();
+    }
+
+    @PatchMapping("/address")
+    public Address newAddress(@RequestBody Address address) throws InvocationTargetException, IllegalAccessException {
+        var current = addressService.findById(address.getId());
+        if (current == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        var methods = current.getClass().getDeclaredMethods();
+        var namePerMethod = new HashMap<String, Method>();
+        for (var method: methods) {
+            var name = method.getName();
+            if (name.startsWith("get") || name.startsWith("set")) {
+                namePerMethod.put(name, method);
+            }
+        }
+        for (var name : namePerMethod.keySet()) {
+            if (name.startsWith("get")) {
+                var getMethod = namePerMethod.get(name);
+                var setMethod = namePerMethod.get(name.replace("get", "set"));
+                if (setMethod == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Impossible invoke set method from object : " + current + ", Check set and get pairs.");
+                }
+                var newValue = getMethod.invoke(address);
+                if (newValue != null) {
+                    setMethod.invoke(current, newValue);
+                }
+            }
+        }
+        addressService.save(address);
+        return current.get();
     }
 
     @ExceptionHandler(value = { IllegalArgumentException.class })
