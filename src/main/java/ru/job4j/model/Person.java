@@ -15,8 +15,4 @@ public class Person {
     private int id;
     private String login;
     private String password;
-
-    @ManyToOne
-    @JoinColumn(name = "address_id")
-    private Address address;
 }

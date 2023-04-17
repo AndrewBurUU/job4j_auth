@@ -12,11 +12,10 @@ insert into address (country, city, street, house) values ('country3', 'city3', 
 
 create table person (
     id serial primary key not null,
-    login varchar(2000),
+    login varchar(2000) unique,
     password varchar(2000)
-    address_id int references address(id)
 );
 
-insert into person (login, password, address_id) values ('parsentev', '123', 1);
-insert into person (login, password, address_id) values ('ban', '123', 1);
-insert into person (login, password, address_id) values ('ivan', '123', 1);
+insert into person (login, password) values ('parsentev', '123');
+insert into person (login, password) values ('ban', '123');
+insert into person (login, password) values ('ivan', '123');

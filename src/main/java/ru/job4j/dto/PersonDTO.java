@@ -7,5 +7,4 @@ public class PersonDTO {
     private int id;
     private String login;
     private String password;
-    private int addressId;
 }

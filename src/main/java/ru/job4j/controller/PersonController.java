@@ -24,17 +24,14 @@ import java.io.IOException;
 public class PersonController {
 
     private final SpringPersonService persons;
-    private final SpringAddressService addressService;
     private BCryptPasswordEncoder encoder;
     private static final Logger LOGGER = LogManager.getLogger(PersonController.class.getName());
     private final ObjectMapper objectMapper;
 
     public PersonController(final SpringPersonService persons,
-                            SpringAddressService addressService,
                             ObjectMapper objectMapper,
                             BCryptPasswordEncoder encoder) {
         this.persons = persons;
-        this.addressService = addressService;
         this.objectMapper = objectMapper;
         this.encoder = encoder;
     }
@@ -66,7 +63,6 @@ public class PersonController {
             throw new IllegalArgumentException("Invalid password. Password length must be more than 5 characters.");
         }
         person.setPassword(encoder.encode(password));
-        person.setAddress(new Address(1, "", "", "", ""));
         return new ResponseEntity<Person>(
                 this.persons.create(person),
                 HttpStatus.CREATED
@@ -84,7 +80,6 @@ public class PersonController {
             throw new IllegalArgumentException("Invalid password. Password length must be more than 5 characters.");
         }
         person.setPassword(encoder.encode(password));
-        person.setAddress(new Address(1, "", "", "", ""));
         if (this.persons.save(person)) {
             return ResponseEntity.ok().build();
         }
