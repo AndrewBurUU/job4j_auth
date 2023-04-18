@@ -88,6 +88,12 @@ public class PersonController {
     @PatchMapping("/password")
     public Person newPassword(@Valid @RequestBody PersonDTO personDTO) throws InvocationTargetException, IllegalAccessException {
         String password = personDTO.getPassword();
+        if (password == null) {
+            throw new NullPointerException("Password mustn't be empty");
+        }
+        if (password.length() < 6) {
+            throw new IllegalArgumentException("Invalid password. Password length must be more than 5 characters.");
+        }
         var personOptional = persons.findById(personDTO.getId());
         if (personOptional == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
